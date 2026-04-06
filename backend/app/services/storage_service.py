@@ -110,7 +110,8 @@ class StorageService:
                 if location is not None:
                     device.location = location
                 
-                device.updated_at = datetime.now(ZoneInfo("Asia/Kolkata"))
+                # FIX: Use naive datetime since DB column is timezone=False
+                device.updated_at = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None)
                 
                 await session.commit()
                 await session.refresh(device)
@@ -175,7 +176,8 @@ class StorageService:
             List of Reading objects, ordered by timestamp DESC
         """
         async with self.session_factory() as session:
-            cutoff_time = datetime.now(ZoneInfo("Asia/Kolkata")) - timedelta(minutes=minutes)
+            # FIX: Use naive datetime since DB column is timezone=False
+            cutoff_time = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None) - timedelta(minutes=minutes)
             
             stmt = (
                 select(Reading)
@@ -220,9 +222,10 @@ class StorageService:
         """Create new alert"""
         async with self.session_factory() as session:
             try:
+                # FIX: Use naive datetime since DB column is timezone=False
                 alert = Alert(
                     device_id=device_id,
-                    timestamp=datetime.now(ZoneInfo("Asia/Kolkata")),
+                    timestamp=datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None),
                     alert_type=alert_type,
                     severity=severity,
                     message=message,
@@ -292,8 +295,9 @@ class StorageService:
                 if not alert:
                     return None
                 
+                # FIX: Use naive datetime since DB column is timezone=False
                 alert.is_acknowledged = True
-                alert.acknowledged_at = datetime.now(ZoneInfo("Asia/Kolkata"))
+                alert.acknowledged_at = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None)
                 
                 await session.commit()
                 await session.refresh(alert)
@@ -452,7 +456,8 @@ class StorageService:
         """Delete readings older than N days"""
         async with self.session_factory() as session:
             try:
-                cutoff_date = datetime.now(ZoneInfo("Asia/Kolkata")) - timedelta(days=days)
+                # FIX: Use naive datetime since DB column is timezone=False
+                cutoff_date = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None) - timedelta(days=days)
                 
                 stmt = delete(Reading).where(Reading.timestamp < cutoff_date)
                 result = await session.execute(stmt)

@@ -37,7 +37,8 @@ class ApplianceSimulator:
         self.base_power_watts = base_power_watts
         self.power_variance = power_variance
         self.is_on = False
-        self.last_state_change = datetime.now(ZoneInfo("Asia/Kolkata"))
+        # FIX: Use naive datetime for consistency
+        self.last_state_change = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None)
     
     def should_be_on(self, current_time: datetime) -> bool:
         """Override in subclasses - determines if appliance should be on"""
@@ -297,7 +298,9 @@ class EnergySimulator:
     
     def generate_readings(self) -> List[SimulatedReading]:
         """Generate one reading per device for current moment"""
-        current_time = datetime.now(ZoneInfo("Asia/Kolkata"))
+        # FIX: Use naive datetime since DB stores timezone=False
+        # Create timezone-aware then strip for DB compatibility
+        current_time = datetime.now(ZoneInfo("Asia/Kolkata")).replace(tzinfo=None)
         
         # Generate appliance readings
         appliance_readings = [

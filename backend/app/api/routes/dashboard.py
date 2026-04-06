@@ -86,33 +86,40 @@ async def get_current_dashboard(
     }
 
 
-@router.get("/dashboard/recent")
-async def get_recent_readings(
-    device_id: str,
-    minutes: int = 30,
-    storage: StorageService = Depends(get_storage_service)
-):
-    """
-    Get recent readings for a specific device (for live graph)
-    
-    Args:
-        device_id: Device UUID
-        minutes: Minutes of history to retrieve (default 30)
-        
-    Returns:
-        List of readings with timestamp and power
-    """
-    readings = await storage.get_recent_readings(device_id, minutes=minutes)
-    
-    return {
-        "device_id": device_id,
-        "minutes": minutes,
-        "readings": [
-            {
-                "timestamp": r.timestamp.isoformat(),
-                "power_watts": float(r.power_watts),
-                "energy_kwh": float(r.energy_kwh)
-            }
-            for r in readings
-        ]
-    }
+# NOTE: This endpoint is currently unused by the frontend
+# Frontend uses SSE for live data, not this REST endpoint
+# If re-enabling, need to either:
+# 1. Make device_id optional and return data for all devices, or  
+# 2. Update frontend to pass device_id parameter
+# Commented out to avoid confusion about broken contract
+#
+# @router.get("/dashboard/recent")
+# async def get_recent_readings(
+#     device_id: str,
+#     minutes: int = 30,
+#     storage: StorageService = Depends(get_storage_service)
+# ):
+#     """
+#     Get recent readings for a specific device (for live graph)
+#     
+#     Args:
+#         device_id: Device UUID
+#         minutes: Minutes of history to retrieve (default 30)
+#         
+#     Returns:
+#         List of readings with timestamp and power
+#     """
+#     readings = await storage.get_recent_readings(device_id, minutes=minutes)
+#     
+#     return {
+#         "device_id": device_id,
+#         "minutes": minutes,
+#         "readings": [
+#             {
+#                 "timestamp": r.timestamp.isoformat(),
+#                 "power_watts": float(r.power_watts),
+#                 "energy_kwh": float(r.energy_kwh)
+#             }
+#             for r in readings
+#         ]
+#     }

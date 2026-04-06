@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSSE } from '../hooks/useSSE';
 import { api } from '../services/api';
 import DeviceCard from '../components/DeviceCard';
-import PowerChart from '../components/PowerChart';
 import { formatPower } from '../utils/formatters';
 
 export default function Dashboard() {

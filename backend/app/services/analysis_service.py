@@ -3,6 +3,7 @@
 from typing import List, Optional, Tuple
 from datetime import datetime, timedelta, date
 from decimal import Decimal
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app.models import Reading
@@ -29,34 +30,41 @@ class AnalysisService:
         Can be negative if smart plugs report more than main meter (measurement variance)
         
         Args:
-            main_meter_id: UUID of main meter device
-            smart_plug_ids: List of UUIDs for smart plug devices
+            main_meter_id: UUID of main meter device (as string)
+            smart_plug_ids: List of UUIDs for smart plug devices (as strings)
             minutes: Time window to analyze (default 5 minutes)
             
         Returns:
             Unknown load in watts, or None if data unavailable
         """
+        # FIX: Convert string UUIDs to UUID objects for comparison
+        main_meter_uuid = UUID(main_meter_id)
+        smart_plug_uuids = [UUID(pid) for pid in smart_plug_ids]
+        
         # Get latest readings for all devices
         latest_readings_dict = await self.storage.get_latest_readings_all_devices()
         latest_readings = list(latest_readings_dict.values())  # FIX: Convert dict to list
         
         # Find main meter reading
         main_reading = next(
-            (r for r in latest_readings if r.device_id == main_meter_id),
+            (r for r in latest_readings if r.device_id == main_meter_uuid),
             None
         )
         if not main_reading:
             return None
         
         # Check if main meter reading is recent enough
-        cutoff = datetime.now(self.ist) - timedelta(minutes=minutes)
+        # FIX: Use naive datetime since DB stores timezone=False
+        # DB stores timestamps as IST naive, so compare against naive IST
+        now_ist = datetime.now(self.ist).replace(tzinfo=None)
+        cutoff = now_ist - timedelta(minutes=minutes)
         if main_reading.timestamp < cutoff:
             return None
         
         # Get smart plug readings
         plug_readings = [
             r for r in latest_readings
-            if r.device_id in smart_plug_ids and r.timestamp >= cutoff
+            if r.device_id in smart_plug_uuids and r.timestamp >= cutoff
         ]
         
         # Need all plugs to report
