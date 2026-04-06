@@ -41,8 +41,8 @@ fi
 
 echo "✓ PostgreSQL is running"
 
-# Check database exists
-if ! psql -U postgres -lqt | cut -d \| -f 1 | grep -qw energy_monitoring; then
+# Check database exists (use postgres system user to avoid peer auth failures)
+if ! sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw energy_monitoring; then
     echo "✗ Database 'energy_monitoring' not found. Please run:"
     echo "  sudo bash setup_db.sh"
     exit 1

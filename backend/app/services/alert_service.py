@@ -219,7 +219,8 @@ class AlertService:
         Returns:
             True if alerts are suppressed, False if we can create a new alert
         """
-        cutoff = datetime.now(self.ist) - timedelta(minutes=suppression_minutes)
+        # DB stores timestamps as naive (timezone=False); use naive IST datetime
+        cutoff = datetime.now(self.ist).replace(tzinfo=None) - timedelta(minutes=suppression_minutes)
         
         # Get recent alerts of this type for this device
         recent_alerts = await self.storage.get_alerts(

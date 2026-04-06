@@ -37,9 +37,14 @@ class AnalysisService:
         Returns:
             Unknown load in watts, or None if data unavailable
         """
-        # FIX: Convert string UUIDs to UUID objects for comparison
-        main_meter_uuid = UUID(main_meter_id)
-        smart_plug_uuids = [UUID(pid) for pid in smart_plug_ids]
+        # Convert provided IDs (may be `uuid.UUID`, asyncpg UUID, or `str`) to `uuid.UUID`
+        def _to_uuid(val):
+            if isinstance(val, UUID):
+                return val
+            return UUID(str(val))
+
+        main_meter_uuid = _to_uuid(main_meter_id)
+        smart_plug_uuids = [_to_uuid(pid) for pid in smart_plug_ids]
         
         # Get latest readings for all devices
         latest_readings_dict = await self.storage.get_latest_readings_all_devices()
